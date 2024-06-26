@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 
 from .models import Meme
-from .schemas import MemeSchema
+from .schemas import MemeSchema, MemeCreationSchema
 
 class MemeCRUD:
     "CRUD operations class for meme"
@@ -43,7 +43,7 @@ class MemeCRUD:
     @classmethod
     async def create(
         cls,
-        meme: MemeSchema,
+        meme: MemeCreationSchema,
         async_session: async_sessionmaker[AsyncSession]
     ) -> Meme:
         "Coroutine for creating a meme instance"
@@ -64,7 +64,7 @@ class MemeCRUD:
     @classmethod
     async def update(
         cls,
-        meme: MemeSchema,
+        meme: MemeCreationSchema,
         async_session: async_sessionmaker[AsyncSession],
     ) -> Meme:
         "Couroutine for updating a meme instance"
