@@ -54,6 +54,33 @@ async def create_meme(
     )
 
 
+@router.put("/{id}", response_model=MemeSchema)
+async def update_meme(
+    id: int,
+    title: str | None = Form(None),
+    file: UploadFile = File(...),
+):
+    "Endpoint for updating meme"
+
+    meme = await MemeCRUD.get_one(
+        meme_id=id,
+        async_session=session,
+    )
+    if meme is None:
+        raise HTTPException(status_code=404, detail="Meme not found")
+
+    
+    delete_file(file_name=meme.file)
+    upload_file(file=file)
+
+    return await MemeCRUD.update_by_instance(
+        meme=meme,
+        async_session=session,
+        title=title,
+        file=file.filename,
+    )
+
+
 @router.delete("/{id}", response_model=dict)
 async def delete_meme(id: int) -> dict[str, str]:
     "Endpoint for meme deleting"

@@ -66,6 +66,7 @@ class MemeCRUD:
         cls,
         meme: MemeCreationSchema,
         async_session: async_sessionmaker[AsyncSession],
+        **params,
     ) -> Meme:
         "Couroutine for updating a meme instance"
         async with async_session() as session:
@@ -79,8 +80,10 @@ class MemeCRUD:
                         status_code=404,
                         detail="Meme not found"
                     )
+            for param, value in params.items():
+                if value is not None:
+                    setattr(meme_row, param, value)
 
-            meme_row.title = meme.title
             try:
                 await session.commit()
             except IntegrityError as error:
@@ -117,9 +120,42 @@ class MemeCRUD:
     async def delete_by_instance(
         cls,
         meme: Meme,
-        async_session: async_sessionmaker[AsyncSession]
+        async_session: async_sessionmaker[AsyncSession],
     ) -> None:
         "Coroutine for deleting a meme instance"
         async with async_session() as session:
             await session.delete(instance=meme)
             await session.commit()
+
+    @classmethod
+    async def update_by_instance(
+        cls,
+        meme: Meme,
+        async_session: async_sessionmaker[AsyncSession],
+        **params,
+    ) -> Meme:
+        "Coroutine for updating a meme instance"
+        async with async_session() as session:
+            meme_rows = await session.execute(
+                select(Meme).filter(Meme.id==meme.id)
+            )
+            meme_row = meme_rows.scalar_one_or_none()
+
+            if not meme_row:
+                raise HTTPException(
+                        status_code=404,
+                        detail="Meme not found"
+                    )
+            for param, value in params.items():
+                if value is not None:
+                    setattr(meme_row, param, value)
+
+            try:
+                await session.commit()
+            except IntegrityError as error:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Meme with this name already exists"
+                ) from error
+            await session.refresh(meme_row)
+            return meme_row
