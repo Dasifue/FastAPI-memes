@@ -112,3 +112,14 @@ class MemeCRUD:
                     detail="Meme not found"
                 )
             await session.commit()
+
+    @classmethod
+    async def delete_by_instance(
+        cls,
+        meme: Meme,
+        async_session: async_sessionmaker[AsyncSession]
+    ) -> None:
+        "Coroutine for deleting a meme instance"
+        async with async_session() as session:
+            await session.delete(instance=meme)
+            await session.commit()

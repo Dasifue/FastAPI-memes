@@ -2,10 +2,9 @@
 
 from fastapi import APIRouter, HTTPException, Form, File, UploadFile
 from sqlalchemy.sql.schema import Sequence
-from minio.error import S3Error
 
 from services.database import session
-from services.minio_storage import client
+from services.minio_storage import upload_file, delete_file
 
 from .models import Meme
 from .manager import MemeCRUD
@@ -43,17 +42,8 @@ async def create_meme(
     file: UploadFile = File(...)
 ) -> Meme | dict[str, str]:
     "Endpoint for meme creation"
-    try:
-        client.put_object(
-            bucket_name="memes",
-            object_name=file.filename,
-            data=file.file,
-            length=file.size,
-            content_type=file.content_type
-        )
-    except S3Error as error:
-        return {"detail": str(error)}
 
+    upload_file(file)    
     meme = MemeCreationSchema(
         title=title,
         file=file.filename,
@@ -62,3 +52,21 @@ async def create_meme(
         meme=meme,
         async_session=session,
     )
+
+
+@router.delete("/{id}", response_model=dict)
+async def delete_meme(id: int) -> dict[str, str]:
+    "Endpoint for meme deleting"
+    meme = await MemeCRUD.get_one(
+        meme_id=id,
+        async_session=session,
+    )
+    if meme is None:
+        raise HTTPException(status_code=404, detail="Meme not found")
+
+    delete_file(file_name=meme.file)
+    await MemeCRUD.delete_by_instance(
+        meme=meme,
+        async_session=session,
+    )
+    return {"detail": "deleted"}
