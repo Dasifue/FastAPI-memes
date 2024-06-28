@@ -3,4 +3,5 @@ env/
 __pycache__/
 .pytest_cache/
 
-.env
+.env.example
+alembic_example.ini
