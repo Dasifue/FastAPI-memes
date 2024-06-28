@@ -8,8 +8,8 @@ from .models import User
 from .schemas import UserRead, UserCreate
 
 router = APIRouter(
-    prefix="/memes",
-    tags=["Memes"]
+    prefix="/auth",
+    tags=["Auth"]
 )
 
 
@@ -21,11 +21,11 @@ fastapi_users = FastAPIUsers[User, int](
 router.include_router(
     fastapi_users.get_auth_router(auth_backend),
     prefix="/jwt",
-    tags=["auth"],
+    tags=["Auth"],
 )
 
 router.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
     prefix="",
-    tags=["auth"],
+    tags=["Auth"],
 )
