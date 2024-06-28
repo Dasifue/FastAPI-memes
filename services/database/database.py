@@ -1,6 +1,7 @@
 "Async database connection module"
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
 
 from .settings import (
     DB_NAME,
@@ -22,3 +23,6 @@ session = async_sessionmaker(
     bind=engine,
     expire_on_commit=True
 )
+
+class Base(DeclarativeBase):
+    "class for sqlalchemy ORM system"

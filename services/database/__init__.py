@@ -1,3 +1,3 @@
 "__init__.py"
 
-from .database import session, engine
+from .database import session, engine, Base

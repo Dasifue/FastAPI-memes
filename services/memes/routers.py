@@ -1,20 +1,22 @@
 "FastAPI routers and endpoints"
 
-from fastapi import APIRouter, HTTPException, Form, File, UploadFile
+from fastapi import APIRouter, HTTPException, Form, File, UploadFile, Depends
 from sqlalchemy.sql.schema import Sequence
 
 from services.database import session
 from services.minio_storage import upload_file, delete_file
+from services.auth import fastapi_users, User
 
 from .models import Meme
 from .manager import MemeCRUD
 from .schemas import MemeSchema, MemeCreationSchema
 
-
 router = APIRouter(
     prefix="/memes",
     tags=["Memes"]
 )
+
+authenticated_user = fastapi_users.current_user()
 
 @router.get("/", response_model=list[MemeSchema])
 async def get_memes(skip: int = 0, limit: int = 100) -> Sequence[Meme]:  # type: ignore
@@ -39,7 +41,8 @@ async def get_meme(id: int) -> Meme:
 @router.post("/", response_model=MemeSchema)
 async def create_meme(
     title: str = Form(...),
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    user: User = Depends(authenticated_user)
 ) -> Meme | dict[str, str]:
     "Endpoint for meme creation"
 
@@ -59,6 +62,7 @@ async def update_meme(
     id: int,
     title: str | None = Form(None),
     file: UploadFile = File(...),
+    user: User = Depends(authenticated_user)
 ):
     "Endpoint for updating meme"
 
@@ -69,7 +73,7 @@ async def update_meme(
     if meme is None:
         raise HTTPException(status_code=404, detail="Meme not found")
 
-    
+
     delete_file(file_name=meme.file)
     upload_file(file=file)
 
@@ -82,7 +86,7 @@ async def update_meme(
 
 
 @router.delete("/{id}", response_model=dict)
-async def delete_meme(id: int) -> dict[str, str]:
+async def delete_meme(id: int, user: User = Depends(authenticated_user)) -> dict[str, str]:
     "Endpoint for meme deleting"
     meme = await MemeCRUD.get_one(
         meme_id=id,

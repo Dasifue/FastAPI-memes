@@ -3,10 +3,7 @@
 from datetime import datetime
 
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.orm import DeclarativeBase
-
-class Base(DeclarativeBase):
-    "class for sqlalchemy ORM system"
+from services.database import Base
 
 class Meme(Base):
     "Meme model"
